@@ -1,0 +1,154 @@
+<div class="page-header">
+  <div>
+    <h1>Training Modules</h1>
+    <p class="subtitle">Manage the learning catalog that students see on their Training page.</p>
+  </div>
+  @if (!showAddForm() && !editingId()) {
+    <button mat-flat-button color="primary" (click)="openAdd()">
+      <mat-icon>add_circle</mat-icon>
+      Add Module
+    </button>
+  }
+</div>
+
+@if (successMsg()) {
+  <div class="alert alert-success">{{ successMsg() }}</div>
+}
+@if (errorMsg()) {
+  <div class="alert alert-error">{{ errorMsg() }}</div>
+}
+
+@if (showAddForm()) {
+  <mat-card class="form-card">
+    <h2>New Training Module</h2>
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Title</mat-label>
+        <input matInput [ngModel]="form().title" (ngModelChange)="updateForm('title', $event)" maxlength="120">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Material icon name</mat-label>
+        <input matInput [ngModel]="form().iconName" (ngModelChange)="updateForm('iconName', $event)" maxlength="60">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Learning link (https://...)</mat-label>
+        <input matInput [ngModel]="form().learningLink" (ngModelChange)="updateForm('learningLink', $event)" maxlength="500">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea matInput rows="4" [ngModel]="form().description" (ngModelChange)="updateForm('description', $event)" maxlength="1000"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Display order</mat-label>
+        <input matInput type="number" min="0" [ngModel]="form().displayOrder" (ngModelChange)="updateForm('displayOrder', +$event)">
+      </mat-form-field>
+    </div>
+    <div class="form-actions">
+      <button mat-flat-button color="primary" (click)="submitCreate()" [disabled]="saving()">
+        <mat-icon>save</mat-icon>
+        {{ saving() ? 'Saving…' : 'Save Module' }}
+      </button>
+      <button mat-stroked-button (click)="cancelAdd()" [disabled]="saving()">Cancel</button>
+    </div>
+  </mat-card>
+}
+
+@if (loading()) {
+  <app-loading-spinner />
+} @else if (modules().length === 0) {
+  <mat-card class="empty-state">
+    <mat-icon>school</mat-icon>
+    <p>No training modules yet.</p>
+    <button mat-flat-button color="primary" (click)="openAdd()">
+      <mat-icon>add_circle</mat-icon>
+      Add the first module
+    </button>
+  </mat-card>
+} @else {
+  <mat-card class="table-card">
+    <div class="table-wrapper">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="col-order">Order</th>
+            <th class="col-icon">Icon</th>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Link</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (m of modules(); track m.id) {
+            @if (editingId() === m.id) {
+              <tr class="edit-row">
+                <td colspan="6">
+                  <div class="edit-form">
+                    <div class="form-grid">
+                      <mat-form-field appearance="outline">
+                        <mat-label>Title</mat-label>
+                        <input matInput [ngModel]="form().title" (ngModelChange)="updateForm('title', $event)" maxlength="120">
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline">
+                        <mat-label>Material icon name</mat-label>
+                        <input matInput [ngModel]="form().iconName" (ngModelChange)="updateForm('iconName', $event)" maxlength="60">
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Learning link</mat-label>
+                        <input matInput [ngModel]="form().learningLink" (ngModelChange)="updateForm('learningLink', $event)" maxlength="500">
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="full-width">
+                        <mat-label>Description</mat-label>
+                        <textarea matInput rows="3" [ngModel]="form().description" (ngModelChange)="updateForm('description', $event)" maxlength="1000"></textarea>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline">
+                        <mat-label>Display order</mat-label>
+                        <input matInput type="number" min="0" [ngModel]="form().displayOrder" (ngModelChange)="updateForm('displayOrder', +$event)">
+                      </mat-form-field>
+                    </div>
+                    <div class="form-actions">
+                      <button mat-flat-button color="primary" (click)="submitEdit()" [disabled]="saving()">
+                        <mat-icon>save</mat-icon>
+                        {{ saving() ? 'Saving…' : 'Save Changes' }}
+                      </button>
+                      <button mat-stroked-button (click)="cancelEdit()" [disabled]="saving()">Cancel</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            } @else {
+              <tr>
+                <td class="col-order">{{ m.displayOrder }}</td>
+                <td class="col-icon"><mat-icon>{{ m.iconName }}</mat-icon></td>
+                <td class="cell-title">{{ m.title }}</td>
+                <td class="cell-description" [matTooltip]="m.description">{{ m.description }}</td>
+                <td class="cell-link">
+                  <a [href]="m.learningLink" target="_blank" rel="noopener noreferrer">
+                    {{ m.learningLink }}
+                    <mat-icon>open_in_new</mat-icon>
+                  </a>
+                </td>
+                <td class="col-actions">
+                  <button mat-icon-button (click)="startEdit(m)" matTooltip="Edit">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteModule(m)" matTooltip="Delete">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </mat-card>
+}

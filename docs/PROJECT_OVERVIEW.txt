@@ -1,0 +1,190 @@
+CAMPUS PLACEMENT PORTAL — PROJECT OVERVIEW
+==========================================
+
+Scope of this document
+----------------------
+This file describes ONLY what is implemented and reachable in the UI today.
+Backend-only capabilities (controllers/services without a frontend surface)
+are intentionally excluded.
+
+Stack
+-----
+Frontend : Angular 20.3.0, Angular Material 20 (M3), Signals, RxJS 7.8
+Backend  : Spring Boot 4.0.5, Java 21, Spring WebMVC
+Database : MySQL 8.x (Hibernate ddl-auto=update)
+Auth     : JWT access token (in-memory) + httpOnly refresh cookie
+Realtime : STOMP over SockJS (notification bell)
+Theme    : Material M3 with dark/light mode toggle (persisted)
+
+Roles surfaced in the UI
+------------------------
+ADMIN  >  PLACEMENT_OFFICER  >  STUDENT
+EMPLOYER (peer)
+
+Default seeded admin: admin@placementportal.edu / Admin@1234
+
+
+===========================================================================
+SCREEN INVENTORY
+===========================================================================
+
+PUBLIC
+------
+/                          Landing page — role-based CTAs, theme toggle.
+
+AUTH (auth-layout)
+------------------
+/auth/login                Email + password login; redirects by role.
+/auth/register             New user signup (role dropdown: Student,
+                           Employer, Placement Officer).
+
+STUDENT (student-layout)
+------------------------
+/student/dashboard         Stats cards (applications, interviews, active
+                           jobs) + recent applications list.
+/student/jobs              Paginated job search with location/experience
+                           filters; apply modal with resume picker.
+/student/drives            Placement drives grouped by status; each drive
+                           expands to associated jobs with apply modal.
+/student/applications      Paginated list of own applications with status
+                           badges; withdraw action.
+/student/training          Training module cards linking to external
+                           learning resources (seeded set of 5).
+/student/resume            Upload PDF resumes, mark primary, delete.
+/student/profile           Editable profile: roll number, dept, CGPA,
+                           phone, LinkedIn, GitHub, bio, preferences.
+
+EMPLOYER (employer-layout)
+--------------------------
+/employer/dashboard        Stats (active jobs, total apps, pending
+                           interviews) + recent applications.
+/employer/post-job         Create job: title, description, location,
+                           type, exp level, min CGPA, salary range,
+                           openings, deadline.
+/employer/applicants       Pick a job → see applicants → update status.
+/employer/interviews       View shortlisted applicants and schedule
+                           interview rounds (type, date/time, duration,
+                           meeting link / location).
+/employer/profile          Company profile: name, website, industry,
+                           size, HR contact, location, description.
+
+PLACEMENT OFFICER (officer-layout)
+----------------------------------
+/officer/dashboard         High-level analytics: placed students,
+                           placement rate, avg/highest package, drives,
+                           pending applications.
+/officer/drives            Manage placement drives — create form
+                           (title, date, venue, mode, description,
+                           multi-select jobs).
+/officer/employers         List employers; verify unverified ones.
+/officer/analytics         Detailed analytics: students, placement
+                           rate, salary stats, department-wise breakdown.
+/officer/students          Paginated student list with filters
+                           (department, batch, placement status).
+
+ADMIN (admin-layout)
+--------------------
+/admin/dashboard           System stats: total users, active users,
+                           counts by role.
+/admin/users               User CRUD: list/filter/paginate, create,
+                           activate/deactivate, reset password.
+/admin/config              Edit key-value system configuration.
+/admin/audit-logs          Paginated audit log viewer with action
+                           filter (LOGIN, CREATE, UPDATE, DELETE, …).
+/admin/training-modules    CRUD for the student-facing training
+                           module catalogue.
+
+
+===========================================================================
+BACKEND ENDPOINTS ACTUALLY CALLED BY THE UI
+===========================================================================
+
+Auth
+  POST   /api/auth/login
+  POST   /api/auth/register
+
+Students (self)
+  GET    /api/students/me
+  PUT    /api/students/me
+
+Resumes
+  GET    /api/resumes/my
+  POST   /api/resumes
+  PATCH  /api/resumes/{id}/primary
+  DELETE /api/resumes/{id}
+
+Jobs
+  GET    /api/jobs                  (student search, paginated)
+  POST   /api/jobs                  (employer post)
+  GET    /api/jobs/my               (employer's posted jobs)
+
+Drives
+  GET    /api/drives
+  POST   /api/drives                (officer)
+
+Applications
+  POST   /api/applications          (student apply)
+  GET    /api/applications/my       (student)
+  DELETE /api/applications/{id}     (student withdraw)
+  GET    /api/applications/employer (employer)
+  GET    /api/applications/job/{jobId}
+  PATCH  /api/applications/{id}/status
+
+Interviews
+  GET    /api/interviews/employer
+  POST   /api/interviews
+
+Employers
+  GET    /api/employers/me
+  PUT    /api/employers/me
+  GET    /api/employers             (officer)
+  PUT    /api/employers/{id}/verify (officer)
+
+Training
+  GET    /api/training/modules               (student view)
+  GET    /api/admin/training-modules
+  POST   /api/admin/training-modules
+  PUT    /api/admin/training-modules/{id}
+  DELETE /api/admin/training-modules/{id}
+
+Analytics
+  GET    /api/analytics/dashboard
+
+Students (officer overview)
+  GET    /api/students
+
+Admin
+  GET    /api/admin/stats
+  GET    /api/admin/users
+  POST   /api/admin/users
+  PATCH  /api/admin/users/{id}/activate
+  PATCH  /api/admin/users/{id}/deactivate
+  POST   /api/admin/users/{id}/reset-password
+  GET    /api/admin/configs
+  PUT    /api/admin/configs/{key}
+  GET    /api/admin/audit-logs
+
+
+===========================================================================
+CROSS-CUTTING UI
+===========================================================================
+
+Layout shells       auth-layout, student-layout, employer-layout,
+                    officer-layout, admin-layout
+Shared components   navbar, sidebar, status-badge, loading-spinner,
+                    notification-bell
+Core services       auth, api, notification, websocket, theme
+Guards              authGuard, roleGuard, noAuthGuard
+Interceptors        jwt, refresh, error
+
+Token handling      Access token kept in-memory inside AuthService;
+                    refresh token is an httpOnly SameSite=Strict cookie.
+
+Notifications       notification-bell subscribes via STOMP/SockJS using
+                    the JWT in CONNECT headers; backend pushes to
+                    /user/queue/notifications.
+
+Theming             ThemeService toggles a `dark-theme` class on <html>,
+                    persists to localStorage, falls back to OS preference.
+                    All component CSS uses CSS variables; Material M3
+                    handles mat-* component colors automatically.

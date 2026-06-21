@@ -1,0 +1,52 @@
+# --- Claude Code ---
+.claude/
+memory/
+
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+*.swp
+*~
+
+# --- Java / Maven (Backend) ---
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+.mvn/wrapper/maven-wrapper.jar
+
+# --- Spring Boot ---
+HELP.md
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# --- Uploads / runtime data ---
+uploads/
+Backend/uploads/
+Backend/placement-portal-backend/uploads/
+
+# --- Node / Angular (Frontend) ---
+node_modules/
+dist/
+.angular/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Env / secrets ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- Coverage / test output ---
+coverage/
+.nyc_output/

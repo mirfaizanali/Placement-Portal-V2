@@ -1,0 +1,37 @@
+<div class="page-header">
+  <h1>Training &amp; Skill Development</h1>
+  <p class="subtitle">Hand-picked starting points to level up before your next interview.</p>
+</div>
+
+@if (loading()) {
+  <app-loading-spinner />
+} @else if (error()) {
+  <p class="error">{{ error() }}</p>
+} @else if (modules().length === 0) {
+  <mat-card class="empty-state">
+    <mat-icon>school</mat-icon>
+    <p>No training modules available yet. Check back soon.</p>
+  </mat-card>
+} @else {
+  <div class="grid">
+    @for (m of modules(); track m.id) {
+      <mat-card class="module-card">
+        <div class="card-icon">
+          <mat-icon>{{ m.iconName }}</mat-icon>
+        </div>
+        <h2 class="module-title">{{ m.title }}</h2>
+        <p class="module-description">{{ m.description }}</p>
+        <a
+          mat-flat-button
+          color="primary"
+          class="start-btn"
+          [href]="m.learningLink"
+          target="_blank"
+          rel="noopener noreferrer">
+          Start Learning
+          <mat-icon iconPositionEnd>open_in_new</mat-icon>
+        </a>
+      </mat-card>
+    }
+  </div>
+}

@@ -1,0 +1,23 @@
+<div class="auth-container">
+  <header class="auth-topbar">
+    <button mat-stroked-button routerLink="/" class="back-btn">
+      <mat-icon>arrow_back</mat-icon>
+      Home
+    </button>
+    <button mat-icon-button (click)="themeService.toggle()"
+            [matTooltip]="themeService.isDark() ? 'Light mode' : 'Dark mode'"
+            class="theme-toggle">
+      <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    </button>
+  </header>
+  <div class="auth-brand">
+    <mat-icon class="brand-logo">school</mat-icon>
+    <h1>Placement Portal</h1>
+    <p>Campus Internship &amp; Placement Management</p>
+  </div>
+  <mat-card class="auth-card">
+    <mat-card-content>
+      <router-outlet />
+    </mat-card-content>
+  </mat-card>
+</div>

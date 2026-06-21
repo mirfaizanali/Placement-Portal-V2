@@ -1,0 +1,171 @@
+<div class="page-header">
+  <div>
+    <h1>Placement Drives</h1>
+    <p>Browse upcoming and past campus drives. Click a drive to view the jobs and apply.</p>
+  </div>
+</div>
+
+@if (loading()) {
+  <app-loading-spinner />
+} @else {
+  @if (drives().length === 0) {
+    <mat-card class="empty-state">
+      <p>No placement drives have been scheduled yet.</p>
+    </mat-card>
+  } @else {
+    <div class="drives-grid">
+      @for (drive of drives(); track drive.id) {
+        <mat-card class="drive-card" (click)="openDrive(drive)">
+          <div class="drive-header">
+            <h3>{{ drive.title }}</h3>
+            <app-status-badge [status]="drive.status" />
+          </div>
+          <div class="drive-meta">
+            <div class="meta-row">
+              <mat-icon class="meta-icon">event</mat-icon>
+              <span>{{ formatDate(drive.driveDate) }}</span>
+            </div>
+            @if (drive.companyName) {
+              <div class="meta-row">
+                <mat-icon class="meta-icon">business</mat-icon>
+                <span>{{ drive.companyName }}</span>
+              </div>
+            }
+            @if (drive.venue) {
+              <div class="meta-row">
+                <mat-icon class="meta-icon">location_on</mat-icon>
+                <span>{{ drive.venue }}</span>
+              </div>
+            }
+            <div class="meta-row">
+              <mat-icon class="meta-icon">computer</mat-icon>
+              <span class="badge badge-neutral">{{ drive.mode?.replace('_', ' ') }}</span>
+            </div>
+            <div class="meta-row">
+              <mat-icon class="meta-icon">work</mat-icon>
+              <span>{{ drive.jobs?.length || 0 }} job(s)</span>
+            </div>
+          </div>
+          @if (drive.description) {
+            <p class="drive-description">{{ drive.description | slice:0:140 }}...</p>
+          }
+          <div class="drive-footer">
+            <button mat-stroked-button color="primary">View Jobs</button>
+          </div>
+        </mat-card>
+      }
+    </div>
+  }
+}
+
+@if (selectedDrive(); as drive) {
+  <div class="modal-overlay" (click)="closeDrive()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2>{{ drive.title }}</h2>
+          <div class="drive-meta">
+            <div class="meta-row">
+              <mat-icon class="meta-icon">event</mat-icon>
+              <span>{{ formatDate(drive.driveDate) }}</span>
+            </div>
+            @if (drive.venue) {
+              <div class="meta-row">
+                <mat-icon class="meta-icon">location_on</mat-icon>
+                <span>{{ drive.venue }}</span>
+              </div>
+            }
+            <div class="meta-row">
+              <mat-icon class="meta-icon">computer</mat-icon>
+              <span class="badge badge-neutral">{{ drive.mode?.replace('_', ' ') }}</span>
+            </div>
+          </div>
+        </div>
+        <button mat-icon-button (click)="closeDrive()" aria-label="Close">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      @if (drive.description) {
+        <p class="drive-description">{{ drive.description }}</p>
+      }
+
+      <h3 class="jobs-heading">Jobs in this drive</h3>
+
+      @if (!drive.jobs || drive.jobs.length === 0) {
+        <p class="muted">No jobs are linked to this drive.</p>
+      } @else {
+        <div class="jobs-list">
+          @for (job of drive.jobs; track job.id) {
+            <div class="job-row">
+              <div class="job-info">
+                <div class="job-title">{{ job.title }}</div>
+                <div class="job-sub">
+                  <span>{{ job.companyName }}</span>
+                  @if (job.location) { <span>• {{ job.location }}</span> }
+                  @if (job.experienceLevel) { <span>• {{ job.experienceLevel }}</span> }
+                </div>
+                <div class="job-sub">{{ formatSalary(job.salaryMin, job.salaryMax) }}</div>
+              </div>
+              <div class="job-action">
+                @if (isApplied(job.id)) {
+                  <button mat-stroked-button disabled>
+                    <mat-icon>check_circle</mat-icon> Applied
+                  </button>
+                } @else {
+                  <button mat-flat-button color="primary" (click)="openApplyModal(job)">Apply</button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
+
+@if (selectedJobForApply(); as job) {
+  <div class="modal-overlay" (click)="closeApplyModal()">
+    <div class="modal-card modal-card-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Apply to {{ job.title }}</h2>
+        <button mat-icon-button (click)="closeApplyModal()" aria-label="Close">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      @if (applyError()) {
+        <div class="alert alert-error">{{ applyError() }}</div>
+      }
+      @if (applySuccess()) {
+        <div class="alert alert-success">{{ applySuccess() }}</div>
+      }
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Resume *</mat-label>
+        <mat-select [value]="applyForm().resumeId"
+                    (selectionChange)="updateApplyForm('resumeId', $event.value)">
+          @for (resume of resumes(); track resume.id) {
+            <mat-option [value]="resume.id">{{ resume.fileName }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Cover Letter</mat-label>
+        <textarea matInput rows="5" [value]="applyForm().coverLetter"
+                  (input)="updateApplyForm('coverLetter', $any($event.target).value)"
+                  placeholder="Why are you a good fit for this role?"></textarea>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button mat-stroked-button (click)="closeApplyModal()">Cancel</button>
+        <button mat-flat-button color="primary"
+                [disabled]="applying()"
+                (click)="submitApplication()">
+          {{ applying() ? 'Submitting...' : 'Submit Application' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
