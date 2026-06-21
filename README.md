@@ -144,6 +144,5 @@ Change the password from the admin User Management screen before any non-local d
 
 ## Project Documentation
 
-- **[CLAUDE.md](./CLAUDE.md)** — Conventions, package layout, security rules, RBAC, do/don't list
 - **[MAPPING.md](./MAPPING.md)** — Feature → code map for locating endpoints and components
 - **[PROJECT_OVERVIEW.txt](./PROJECT_OVERVIEW.txt)** — High-level inventory of screens and endpoints
