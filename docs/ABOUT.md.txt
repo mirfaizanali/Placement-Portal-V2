@@ -1,0 +1,158 @@
+# ABOUT This Project — Campus Placement Portal
+
+A plain-English walkthrough of what this project is, who it serves, and what it can do. If the other files in this folder (`class.md`, `sequence.md`, `useCase.md`, `collab.md`, `statemac.md`) are the technical blueprints, think of this document as the friendly tour guide.
+
+---
+
+## 1. What is this project?
+
+The **Campus Placement Portal** is a full-stack web application that runs an entire college's placement and internship process online. It brings four kinds of people into one shared space — students looking for jobs, employers hiring from campus, placement officers coordinating drives, and administrators keeping the whole system healthy. Instead of juggling spreadsheets, WhatsApp groups, and email chains, every part of the placement lifecycle happens inside one portal.
+
+---
+
+## 2. Why it exists
+
+Most campus placement cells run on a patchwork of tools. Job postings go out over email. Resumes are collected in shared drives. Interview schedules live in one person's calendar. When the year ends, someone has to manually count who got placed where and at what salary.
+
+This portal replaces that mess. It is one place where:
+
+- Jobs are posted and discovered.
+- Applications are submitted and tracked.
+- Interviews are scheduled and remembered.
+- Drives are planned and run.
+- Reports are generated automatically.
+
+The goal is simple: less chasing, more placing.
+
+---
+
+## 3. Who uses it
+
+The portal supports five roles, each with their own experience.
+
+### Student
+The largest user group. Students sign up, build a profile, upload their resume, browse open jobs and internships, and apply with a click. They can see the status of every application they have submitted, get notified when an interview is scheduled, and explore training modules to fill skill gaps. The portal also recommends jobs that match their skills and CGPA.
+
+### Employer
+Companies register on the portal and, once verified, can post job and internship openings. They see the list of students who have applied to each posting, shortlist candidates, schedule interview rounds, and record feedback after each round. Everything they need to run a campus hire — from posting to final selection — lives on one screen.
+
+### Placement Officer
+The coordinators who make the cell run. Officers create **placement drives** (time-bounded events that bundle several jobs together for an eligibility window), verify new employer accounts before they go live, view all student applications across the campus, and look at analytics dashboards that show placement rates, average packages, and department-wise breakdowns.
+
+### Admin
+The system caretaker. Admins manage user accounts (create, activate, deactivate, reset passwords), edit the catalog of training modules, change system-wide configuration, and inspect the audit log that records who did what and when.
+
+### Faculty Mentor (backend only — no UI yet)
+The role exists in the database and backend APIs — faculty are meant to review their mentees' internship reports — but no screens have been built for them yet. This is a known gap, not an oversight.
+
+---
+
+## 4. What it can actually do
+
+Here is the feature set, grouped by what the system does rather than who uses it.
+
+### Accounts and login
+Users register with an email and password and pick their role. Passwords are stored safely (BCrypt with a strong work factor). Logging in returns a short-lived access token kept only in browser memory, plus a longer-lived refresh token stored as a secure cookie. There is no "forgot password" flow yet — that's on the roadmap.
+
+### Jobs and internships
+Employers create postings with a title, description, required skills, minimum CGPA, salary, location, and deadline. Students browse and filter these, and apply directly. Internship postings work the same way under the hood, though the student-facing internship screen isn't built yet.
+
+### Applications and status tracking
+When a student applies, the application enters a workflow — applied, shortlisted, interview scheduled, offered, accepted, or rejected. Both the student and the employer can see the current status at any time. Students can withdraw an application until a certain point.
+
+### Interview scheduling and feedback
+Employers schedule one or more interview rounds for a shortlisted student, set the date and mode (in-person, phone, online), and record feedback after each round. The student sees their interview calendar inside the portal.
+
+### Placement drives
+Officers create drives — for example, "Autumn 2026 IT Drive" — and link multiple job postings to a drive. Students whose CGPA and department meet the drive's eligibility rules can participate. Drives have a start and end window, so applications only open during that period.
+
+### Resume management
+Students upload resumes as PDF, DOC, or DOCX files (up to 10 MB). They can keep multiple resumes and mark one as primary. The file type is checked before upload, so unsupported formats are rejected at the door.
+
+### Smart job recommendations
+A scoring engine looks at the student's skills, CGPA, work experience, and stated preferences, and matches them against open jobs. Each match gets a score, and jobs are ranked. If the student's CGPA falls below a job's minimum, that job is dropped from the list rather than shown with a low score. Logic is currently exposed through APIs; the student-facing recommendations screen is a known gap.
+
+### Real-time notifications
+Anything important — a new application, a scheduled interview, a status change, an employer verification — fires a notification. The notification is saved in the database, pushed to the user's browser instantly through a WebSocket so the bell icon updates without refresh, and emailed in the background. Email failures never block the rest of the system.
+
+### Training and skill development
+The portal ships with a small catalog of curated learning modules (HTML/CSS, JavaScript, Java, Python, interview prep) that link out to external learning resources. Admins can add, edit, or remove modules. Students browse the catalog from their dashboard.
+
+### Analytics dashboards
+Placement officers see live numbers — total placements, placement rate, average package, department-wise breakdowns. Results are cached for fifteen minutes so the dashboards stay fast even on a large campus.
+
+### Audit logging
+Every state-changing action (create, update, delete) is logged in the background with who did it, when, from what IP, and using which browser. Admins can search and filter this log.
+
+### Light and dark theme
+The whole UI supports both light and dark mode. The toggle lives in the navbar, the choice is remembered across sessions, and the system falls back to the user's OS preference if they haven't picked one.
+
+---
+
+## 5. How it's built (without the buzzwords)
+
+### Frontend
+The part you see in the browser. Built with **Angular 20** and **Angular Material** for a clean, consistent look. It runs on port **4200** during development. Theming, layout, and all the screens described above live here.
+
+### Backend
+The brain of the system. Built with **Spring Boot 4** on **Java 21**. It exposes about forty REST endpoints under `/api/`, handles authentication and authorization, applies business rules, and talks to the database. It runs on port **8081**.
+
+### Database
+A **MySQL 8** database holds users, profiles, jobs, applications, interviews, drives, resumes, notifications, training modules, audit logs, and system configuration. Every record has a UUID as its primary key. The schema is currently kept in sync automatically by Hibernate; a stricter Flyway-based migration setup is parked until the framework supports it cleanly.
+
+### Real-time layer
+WebSockets (STOMP over SockJS) keep the notification bell live without polling. As soon as the backend sends a notification, the user's browser hears about it and updates the UI.
+
+### Background email
+Outgoing emails go through a non-blocking HTTP client so a slow email provider can't slow down the rest of the system.
+
+---
+
+## 6. A typical day in the portal
+
+A student named Priya opens the portal at 9 a.m. She sees three jobs at the top of her dashboard, recommended because they match her skills and CGPA. She clicks the most interesting one — a backend engineer role at a mid-size company — and applies. Her primary resume is attached automatically.
+
+Across town, the employer logs in mid-morning, opens the job's applicant list, and sees Priya among twenty other candidates. He shortlists six, including her, and schedules a first-round technical interview for Friday at 3 p.m.
+
+The instant he saves the schedule, Priya's notification bell pings. She also gets an email confirming the slot. Her dashboard now shows the upcoming interview.
+
+Friday afternoon, the interview happens. The employer records feedback inside the portal and marks Priya as "Selected for next round."
+
+Meanwhile, the placement officer is watching the analytics page. She sees that the company has shortlisted six students from her campus, with one moving toward an offer, and the average package this season ticking upward.
+
+Every step of this story — the recommendation, the application, the interview, the notification, the analytics update — happens inside a single portal. None of it requires a spreadsheet.
+
+---
+
+## 7. What's not in the UI yet
+
+Honesty matters. These exist in the backend but have no screens:
+
+- **Faculty mentor experience.** The role, APIs, and database tables are ready, but no faculty dashboard, mentee list, or report-approval screen has been built.
+- **Student internship browsing.** Internship APIs work; the student-side screen is not built.
+- **Student-facing report submission.** Backend endpoints exist.
+- **Personalized recommendation screen for students.** The scoring engine works through APIs.
+- **Forgot password.** The flow has not been built yet.
+
+These are deliberate scoping decisions, not bugs.
+
+---
+
+## 8. Where to look next
+
+If you want more depth, the rest of this folder and the project root will help:
+
+- **`useCase.md`** — Who can do what, drawn as use cases.
+- **`class.md`** — The data model and how entities relate.
+- **`sequence.md`** — Step-by-step interactions for key flows (login, apply, interview).
+- **`collab.md`** — How objects collaborate at runtime.
+- **`statemac.md`** — Lifecycle of an application as it moves through statuses.
+
+At the project root:
+
+- **`CLAUDE.md`** — Engineering conventions, coding rules, security details.
+- **`MAPPING.md`** — Feature-to-code mapping; useful when you want to find the file behind a feature.
+- **`PROJECT_OVERVIEW.txt`** — A flat inventory of every screen and endpoint.
+- **`README.md`** — How to set up and run the project locally.
+
+That's the portal in plain English. Welcome aboard.
